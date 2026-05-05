@@ -19,6 +19,14 @@ function drawBattlefield(ctx, canvas) {
 }
 
 function drawUnit(ctx, unit) {
+  if (unit.isSelected) {
+    ctx.beginPath();
+    ctx.strokeStyle = '#ffe36e';
+    ctx.lineWidth = 3;
+    ctx.arc(unit.x, unit.y, 20, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
   ctx.beginPath();
   ctx.fillStyle = unit.team === 'ally' ? '#4aa3ff' : '#ff5d5d';
   ctx.arc(unit.x, unit.y, 14, 0, Math.PI * 2);

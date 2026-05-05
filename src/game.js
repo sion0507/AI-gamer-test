@@ -1,6 +1,10 @@
 import { createUnit } from './unit.js';
 import { isValidCommand } from './command.js';
 
+const UPDATE_INTERVALS = {
+  movement: 100
+};
+
 const MODE = {
   PLAYER_MODE: 'PLAYER_MODE',
   AI_COMMAND_MODE: 'AI_COMMAND_MODE'
@@ -34,7 +38,8 @@ export function createGameState() {
   return {
     mode: MODE.PLAYER_MODE,
     units: [...alliedUnits, ...enemyUnits],
-    commandQueue: []
+    commandQueue: [],
+    movementAccumulatorMs: 0
   };
 }
 
@@ -49,6 +54,62 @@ export function dispatchCommand(gameState, command) {
 
 export function updateGameState(gameState) {
   while (gameState.commandQueue.length > 0) {
-    gameState.commandQueue.shift();
+    const command = gameState.commandQueue.shift();
+    applyCommand(gameState, command);
   }
+
+  gameState.movementAccumulatorMs += 16.67;
+  while (gameState.movementAccumulatorMs >= UPDATE_INTERVALS.movement) {
+    updateUnitMovement(gameState, UPDATE_INTERVALS.movement / 1000);
+    gameState.movementAccumulatorMs -= UPDATE_INTERVALS.movement;
+  }
+}
+
+function applyCommand(gameState, command) {
+  if (command.type !== 'move' || !command.target) {
+    return;
+  }
+
+  command.unitIds.forEach((unitId) => {
+    const unit = gameState.units.find((candidate) => candidate.id === unitId);
+    if (!unit || unit.team !== 'ally') {
+      return;
+    }
+
+    unit.currentCommand = {
+      type: command.type,
+      target: { x: command.target.x, y: command.target.y }
+    };
+  });
+}
+
+function updateUnitMovement(gameState, deltaSeconds) {
+  gameState.units.forEach((unit) => {
+    if (!unit.currentCommand || unit.currentCommand.type !== 'move') {
+      return;
+    }
+
+    const { target } = unit.currentCommand;
+    const dx = target.x - unit.x;
+    const dy = target.y - unit.y;
+    const distanceToTarget = Math.hypot(dx, dy);
+
+    if (distanceToTarget < 1) {
+      unit.x = target.x;
+      unit.y = target.y;
+      unit.currentCommand = null;
+      return;
+    }
+
+    const moveDistance = unit.moveSpeed * deltaSeconds;
+    if (moveDistance >= distanceToTarget) {
+      unit.x = target.x;
+      unit.y = target.y;
+      unit.currentCommand = null;
+      return;
+    }
+
+    unit.x += (dx / distanceToTarget) * moveDistance;
+    unit.y += (dy / distanceToTarget) * moveDistance;
+  });
 }
