@@ -1,83 +1,63 @@
 # AGENTS.md
 
-이 문서는 Codex 또는 다른 코딩 에이전트가 이 저장소에서 작업할 때 반드시 따라야 하는 구현 지침입니다.
+This file defines the implementation rules for coding agents working on **Simple RTS AI**.
 
-이 프로젝트는 웹 기반 2D 초간단 RTS 전술 게임입니다. 초기 목표는 플레이어가 마우스로 아군 부대 5개를 조작하는 것입니다. 최종 목표는 자연어 명령을 이해하는 AI 게이머를 붙이는 것입니다.
+Read this file before modifying the project.
 
----
+## Project Summary
 
-## 1. Highest Priority Rule
+Simple RTS AI is a browser-based 2D tactical RTS prototype.
 
-가장 중요한 규칙은 다음입니다.
+The initial game has:
 
-> All player inputs and future AI-generated actions must be represented as Command objects.
+- 5 allied units
+- 5 enemy units
+- Mouse-based allied control
+- Hidden enemies until discovered by allied vision
+- Automatic combat after detection
+- Basic enemy AI
 
-절대 마우스 입력을 유닛 동작에 직접 연결하지 마세요.
+The long-term goal is an **AI Commander Mode**, where the player gives natural-language instructions and the AI converts them into executable game commands.
 
-잘못된 방식:
+## Non-Negotiable Architecture Rule
 
-```js
-unit.x = mouseX;
-unit.y = mouseY;
+All player input and all future AI-generated actions must be represented as **Command objects**.
+
+Do not hard-code mouse behavior directly into unit behavior.
+
+Correct flow:
+
+```text
+Mouse input
+→ Command object
+→ command execution system
+→ unit state changes
 ```
 
-권장 방식:
+Future flow:
 
-```js
-const command = {
-  type: "move",
-  unitIds: [selectedUnit.id],
-  target: { x: mouseX, y: mouseY }
-};
-
-game.issueCommand(command);
+```text
+Natural-language input
+→ AI parser / commander
+→ Command object or command list
+→ command execution system
+→ unit state changes
 ```
 
-게임 로직은 Command를 실행해야 합니다.  
-플레이어 입력도 Command를 만들고, 미래의 AI 게이머도 Command를 만들어야 합니다.
+The game logic must not care whether a command came from mouse input, a rule-based text parser, or a future LLM-based commander.
 
----
+## Current Technical Stack
 
-## 2. Project Purpose
+Use:
 
-이 프로젝트는 단순한 RTS 게임이 아니라, 자연어 기반 AI 게이머를 실험하기 위한 전술 시뮬레이션 플랫폼입니다.
+- HTML5
+- CSS
+- Vanilla JavaScript
+- HTML5 Canvas
 
-초기 버전:
+Do not add external libraries unless explicitly requested.
 
-- Player Control Mode
-- 마우스 클릭으로 아군 부대 이동
-- 시야 안에 들어온 적 자동 공격
-
-최종 버전:
-
-- AI Commander Mode
-- 자연어 목표 입력
-- AI가 작전 JSON 생성
-- JSON이 Command 객체로 변환됨
-- 아군 부대들이 자동 수행
-
-따라서 현재 구현할 때도 미래의 AI Commander Mode를 고려해야 합니다.
-
----
-
-## 3. Technology Constraints
-
-초기 구현에서는 다음을 지킵니다.
-
-- Use HTML5 Canvas.
-- Use vanilla JavaScript.
-- Do not use external libraries unless explicitly requested.
-- Keep the project runnable as a static web app.
-- Use simple shapes instead of image assets for the first prototype.
-- Keep the code readable and modular.
-
-외부 그래픽 에셋, 빌드 도구, 프레임워크, 번들러는 초기에는 사용하지 않습니다.
-
----
-
-## 4. Recommended File Structure
-
-초기 구조는 다음과 같습니다.
+## Target File Structure
 
 ```text
 simple-rts-ai/
@@ -96,114 +76,112 @@ simple-rts-ai/
     ai.js
 ```
 
-각 파일 역할은 다음과 같습니다.
+## File Responsibilities
 
-### index.html
+### `index.html`
 
-- Canvas와 기본 UI를 포함합니다.
-- 스크립트 로딩을 담당합니다.
-- 게임 로직을 직접 작성하지 않습니다.
+Responsible for:
 
-### style.css
+- Canvas element
+- Basic UI containers
+- Script loading
 
-- 화면 레이아웃
-- Canvas 스타일
-- 모드 전환 UI
-- 명령 입력창 UI
+Should not contain game logic.
 
-### src/main.js
+### `style.css`
 
-- 앱 시작점
-- Canvas 초기화
-- Game 인스턴스 생성
-- 메인 루프 시작
+Responsible for:
 
-### src/game.js
+- Layout
+- Canvas styling
+- UI styling
 
-- 전체 게임 상태 관리
-- 유닛 목록 관리
-- Command 발행 및 실행
-- 업데이트 주기 관리
-- 승패 판정
+Should not contain game state assumptions beyond class names and element IDs.
 
-### src/unit.js
+### `src/main.js`
 
-- Unit 클래스 또는 유닛 생성 함수
-- 위치, 체력, 공격력, 시야, 이동 속도 등 유닛 데이터 정의
-- 유닛 자체의 순수 상태와 기본 동작 보조 함수
+Responsible for:
 
-### src/command.js
+- Bootstrapping the game
+- Creating the canvas context
+- Initializing game systems
+- Starting the main loop
 
-- Command 타입 정의
-- Command 생성 함수
-- Command 유효성 검사
-- move, attackMove, hold, scout, defend, retreat 구조 정의
+Should remain small.
 
-### src/input.js
+### `src/game.js`
 
-- 마우스 입력 처리
-- 유닛 선택
-- 이동 명령 생성
-- 직접 유닛 상태를 바꾸지 말고 Command를 생성해야 함
+Responsible for:
 
-### src/render.js
+- Central game state
+- Main update loop
+- System scheduling
+- Win/loss checks
+- Command dispatching
 
-- Canvas 렌더링 전담
-- 맵 그리기
-- 유닛 그리기
-- 체력바 그리기
-- 시야 표시
-- 선택 표시
+Should not contain rendering implementation details.
 
-### src/ai.js
+### `src/unit.js`
 
-- 개별 유닛 AI
-- 적군 간단 AI
-- 미래 CommanderAI 자리
-- 미래 NaturalLanguageParser 자리
+Responsible for:
 
----
+- Unit class or factory
+- Unit default stats
+- Unit-related helper functions
+- Distance checks and basic unit utilities
 
-## 5. Game Data Model
+Should not directly read mouse events.
 
-유닛은 최소한 다음 정보를 가져야 합니다.
+### `src/command.js`
 
-```js
-{
-  id: "ally1",
-  team: "ally",
-  name: "Ally Squad 1",
+Responsible for:
 
-  x: 100,
-  y: 200,
+- Command object definitions
+- Command factory helpers
+- Command validation
+- Supported command types
 
-  hp: 100,
-  maxHp: 100,
+All player and AI actions should pass through this structure.
 
-  attackDamage: 10,
-  attackRange: 70,
-  visionRange: 180,
-  moveSpeed: 80,
+### `src/input.js`
 
-  currentCommand: null,
-  targetEnemyId: null,
+Responsible for:
 
-  isSelected: false,
-  isVisible: true,
-  lastKnownPosition: null
-}
-```
+- Mouse events
+- Selection logic
+- Translating input into Command objects
+- Player control mode input behavior
 
-적군도 같은 구조를 사용합니다.
+Should not directly mutate unit movement except through Command creation and dispatch.
 
-단대호 하나를 하나의 전투 유닛으로 취급합니다.  
-병사 개별 시뮬레이션은 구현하지 않습니다.
+### `src/render.js`
 
----
+Responsible for:
 
-## 6. Command Types
+- Drawing the map
+- Drawing units
+- Drawing selection indicators
+- Drawing health bars
+- Drawing vision/debug overlays
+- Drawing UI state if needed
 
-Command는 최소한 다음 타입을 고려합니다.
+Must be read-only with respect to game state.
+
+### `src/ai.js`
+
+Responsible for:
+
+- Basic unit AI
+- Basic enemy AI
+- Future commander AI
+- Rule-based text command parser
+- Future natural-language command integration boundary
+
+Should create or request Command objects rather than directly teleporting or mutating units.
+
+## Command Types
+
+Supported command types should include, at minimum:
 
 ```text
 move
@@ -214,118 +192,99 @@ defend
 retreat
 ```
 
-초기 구현에서는 `move`와 `attackMove`만 실제 동작해도 됩니다.  
-나머지 타입은 이후 확장을 고려해 구조상 자리를 남겨둡니다.
+Initial implementation may only support:
 
-Command 예시:
+```text
+move
+attackMove
+```
 
-```js
+But the structure should allow the others to be added later.
+
+Example Command:
+
+```json
 {
-  type: "move",
-  unitIds: ["ally1", "ally2"],
-  target: { x: 400, y: 300 }
+  "type": "move",
+  "unitIds": ["ally1", "ally2"],
+  "target": { "x": 400, "y": 300 }
 }
 ```
 
-attackMove 예시:
+## Game Modes
 
-```js
-{
-  type: "attackMove",
-  unitIds: ["ally1", "ally2", "ally3"],
-  target: { x: 700, y: 250 }
-}
+The project should support this mode structure:
+
+```text
+PLAYER_MODE
+AI_COMMAND_MODE
 ```
 
----
+Initial phases can implement only `PLAYER_MODE`, but the code should avoid assumptions that make `AI_COMMAND_MODE` difficult to add later.
 
-## 7. Update Cycle Design
+## Update Timing Policy
 
-업데이트 주기를 분리합니다.
+This section is the single source of truth for update timing constants.
 
-권장 기본값:
+Use separated update intervals instead of updating every system every frame.
+
+Recommended constants:
 
 ```js
 const UPDATE_INTERVALS = {
-  movement: 100,
-  combat: 250,
-  vision: 500,
-  unitAI: 1000,
-  commanderAI: 10000
+  movement: 100,       // 0.1 seconds
+  combat: 250,         // 0.25 seconds
+  vision: 500,         // 0.5 seconds
+  unitAI: 1000,        // 1 second
+  commanderAI: 10000   // 10 seconds
 };
 ```
 
-각 주기의 의미:
+Rules:
 
-- movement: 유닛 이동 처리
-- combat: 공격 판정과 데미지 처리
-- vision: 시야 계산과 적 표시 여부 갱신
-- unitAI: 개별 유닛 자동 판단
-- commanderAI: AI 게이머의 전체 작전 판단
+- Rendering may run with `requestAnimationFrame`.
+- Movement should update frequently enough to feel responsive.
+- Combat should update frequently enough for readable feedback.
+- Vision does not need to update every frame.
+- Unit AI should not make expensive decisions every frame.
+- Commander AI should make strategic decisions slowly, approximately every 10 seconds.
+- If these values need to change, update them here first and then update code accordingly.
 
-주의:
+## Basic Enemy AI Requirement
 
-- 전체 시뮬레이션을 10초마다만 갱신하지 마세요.
-- 이동과 전투는 짧은 주기로 처리해야 합니다.
-- AI Commander의 전략 판단만 10초 단위로 처리합니다.
+Enemy units should not remain completely passive.
 
----
+From the automatic combat phase onward, enemy units should have simple behavior such as:
 
-## 8. Enemy AI Requirement
+- Patrol around their initial area
+- Detect allied units in vision range
+- Move toward detected allied units
+- Attack if in range
+- Optionally retreat slightly when low on health
 
-적군이 가만히 서 있는 상태로만 구현되면 안 됩니다.
+Keep enemy AI simple. It exists to create a useful test environment for the future AI commander.
 
-Phase 4부터 최소한 다음 행동을 넣습니다.
+## Natural-Language AI Commander Direction
 
-- 기본 위치 주변 순찰
-- 아군 발견 시 공격
-- 사거리 밖이면 접근
-- 체력이 낮으면 약간 후퇴
-
-초기 적군 AI는 단순해도 됩니다.  
-목표는 AI 게이머를 테스트할 수 있는 움직이는 상대를 만드는 것입니다.
-
----
-
-## 9. Rendering Rules
-
-초기에는 이미지를 사용하지 않습니다.
-
-권장 표현:
-
-- 아군: 파란색 계열 원 또는 사각형
-- 적군: 빨간색 계열 원 또는 사각형
-- 선택된 유닛: 테두리 또는 강조 표시
-- 체력바: 유닛 위 작은 막대
-- 시야: 선택된 유닛 주변 반투명 원
-- 적군: 아군 시야 안에 있을 때만 표시
-
-그래픽 퀄리티보다 게임 로직과 AI 확장 구조가 우선입니다.
-
----
-
-## 10. AI Commander Architecture
-
-미래 AI Commander Mode는 다음 흐름을 따라야 합니다.
+The future AI commander should follow this architecture:
 
 ```text
-Natural language input
-→ NaturalLanguageParser
-→ structured plan JSON
+Natural-language instruction
+→ parser / LLM integration
+→ structured operation JSON
 → CommanderAI
-→ unit-level Command objects
-→ Game execution
+→ Command objects
+→ game execution
 ```
 
-LLM이 직접 유닛을 움직이면 안 됩니다.  
-LLM은 구조화된 JSON을 생성해야 하고, 게임은 그 JSON을 검증한 뒤 Command로 실행해야 합니다.
+The natural-language system should not directly modify units.
 
-예상 JSON 예시:
+Example future parser output:
 
 ```json
 {
   "intent": "scout_then_attack",
-  "priority": "minimize_casualties",
+  "priority": "minimize_losses",
   "commands": [
     {
       "type": "scout",
@@ -346,100 +305,106 @@ LLM은 구조화된 JSON을 생성해야 하고, 게임은 그 JSON을 검증한
 }
 ```
 
----
+## Do Not
 
-## 11. Rule-Based Parser Warning
+These restrictions are important.
 
-Phase 7의 규칙 기반 텍스트 파서는 너무 복잡하게 만들지 않습니다.
+### Architecture Restrictions
 
-허용 범위:
+- Do not bypass the Command system for player control.
+- Do not bypass the Command system for AI control.
+- Do not make mouse input directly change unit positions.
+- Do not make natural-language parsing directly change unit positions.
+- Do not hard-code one-off behavior that prevents future AI Commander Mode.
+- Do not implement future phases while working on the current requested phase.
 
-- “중앙 공격”
-- “왼쪽 정찰”
-- “후퇴”
-- “방어”
-- “전체 공격”
+### File Boundary Restrictions
 
-복잡한 조건부 자연어 명령은 규칙 기반 파서로 깊게 구현하지 않습니다.
+- Do not put rendering code inside `game.js`.
+- Do not put rendering code inside `unit.js`.
+- Do not mutate unit state inside `render.js`.
+- Do not handle mouse events inside `unit.js`.
+- Do not handle mouse events inside `render.js`.
+- Do not place command parsing logic inside `render.js`.
+- Do not place AI decision logic inside `input.js`.
+- Do not place UI styling inside JavaScript unless it is unavoidable.
+- Do not let `ai.js` directly teleport, damage, or remove units. It should create or dispatch commands whenever possible.
 
-예:
+### Dependency and Security Restrictions
 
-```text
-왼쪽으로 정찰 보내고 적 발견하면 중앙 부대가 합류해서 공격해
+- Do not add external libraries unless explicitly requested.
+- Do not add a framework such as React, Vue, Phaser, or Pixi unless explicitly requested.
+- Do not store API keys in frontend code.
+- Do not call OpenAI, Claude, or any LLM provider directly from browser JavaScript with a secret key.
+- Do not add backend code unless the current phase explicitly requests it.
+
+### Scope Restrictions
+
+- Do not implement resource gathering.
+- Do not implement buildings.
+- Do not implement unit production.
+- Do not implement upgrades.
+- Do not implement complex pathfinding unless explicitly requested.
+- Do not add image assets in early phases; use simple shapes first.
+
+## Implementation Style
+
+Prefer:
+
+- Small functions
+- Clear naming
+- Modular files
+- Simple data structures
+- Readable code over clever code
+- Constants for tunable values
+- Comments only where they clarify architecture or non-obvious decisions
+
+Avoid:
+
+- Over-engineering
+- Large monolithic files
+- Deep inheritance trees
+- Premature optimization
+- Complex AI before the basic game loop is stable
+
+## Suggested Completion Criteria Per Phase
+
+Before considering a phase complete:
+
+- The game opens in a browser
+- No console errors appear during normal play
+- The requested phase behavior works visibly
+- The Command architecture is preserved
+- File responsibilities remain separated
+- Existing features from previous phases still work
+
+## Manual Test Checklist
+
+At minimum, test:
+
+- Page loads successfully
+- Canvas displays correctly
+- Allied units appear
+- Enemy units appear or hide according to the current phase
+- Clicking/selecting works when implemented
+- Movement works when implemented
+- Vision works when implemented
+- Combat works when implemented
+- Dead units are removed or marked inactive
+- Win/loss state appears when implemented
+
+## How to Run
+
+For early static versions:
+
+```bash
+python3 -m http.server 8000
 ```
 
-이런 문장은 규칙 기반으로 억지 구현하지 말고, 나중에 LLM 기반 자연어 해석 단계에서 처리합니다.
-
----
-
-## 12. Security Rule for LLM Integration
-
-브라우저 코드에 LLM API 키를 직접 넣지 마세요.
-
-미래 LLM 통합은 다음 구조를 사용합니다.
+Then open:
 
 ```text
-Browser game
-→ backend server
-→ LLM API
-→ JSON command response
-→ browser game
+http://localhost:8000
 ```
 
-초기 정적 웹 게임에는 API 연동을 넣지 않습니다.
-
----
-
-## 13. Development Process
-
-한 번에 전체 Phase를 구현하지 마세요.
-
-작업은 반드시 작은 단계로 나눕니다.
-
-권장 순서:
-
-1. Phase 1 only
-2. Phase 2 only
-3. Phase 3 only
-4. Phase 4 only
-5. 이후 확장
-
-각 Phase가 끝나면 다음을 확인합니다.
-
-- 브라우저에서 실행되는가
-- 콘솔 에러가 없는가
-- 해당 Phase의 기능만 구현되었는가
-- Command 중심 구조가 유지되는가
-- 기존 기능이 깨지지 않았는가
-
----
-
-## 14. Definition of Done
-
-각 작업의 완료 기준은 다음입니다.
-
-- 로컬 브라우저에서 실행 가능
-- 콘솔 에러 없음
-- 새 기능이 기존 기능을 깨지 않음
-- 입력은 Command 구조를 통해 처리됨
-- 코드가 파일 역할에 맞게 분리됨
-- 외부 라이브러리 추가 없음
-- README 또는 PLANS와 충돌하는 설계 변경 없음
-
----
-
-## 15. First Task Recommendation
-
-처음 작업은 Phase 1만 구현합니다.
-
-첫 작업 범위:
-
-- index.html 생성
-- style.css 생성
-- src 파일 구조 생성
-- Canvas 표시
-- 아군 5개, 적군 5개 초기 배치
-- 유닛을 단순 도형으로 렌더링
-- 아직 이동, 전투, 시야, AI는 구현하지 않음
-
-그다음 Phase 2에서 선택과 이동을 구현합니다.
+Directly opening `index.html` is acceptable if no browser restrictions occur.
