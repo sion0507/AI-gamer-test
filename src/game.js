@@ -1,8 +1,13 @@
 import { createUnit } from './unit.js';
 import { isValidCommand } from './command.js';
+import { getDistance } from './unit.js';
 
 const UPDATE_INTERVALS = {
-  movement: 100
+  movement: 100,
+  combat: 250,
+  vision: 500,
+  unitAI: 1000,
+  commanderAI: 10000
 };
 
 const MODE = {
@@ -23,7 +28,7 @@ function spawnTeam(team, count, startX, startY, spacingX, spacingY) {
         name: `${team === 'ally' ? 'Ally' : 'Enemy'} ${i + 1}`,
         x: startX + col * spacingX,
         y: startY + row * spacingY,
-        isVisible: true
+        isVisible: team === 'ally'
       })
     );
   }
@@ -39,7 +44,8 @@ export function createGameState() {
     mode: MODE.PLAYER_MODE,
     units: [...alliedUnits, ...enemyUnits],
     commandQueue: [],
-    movementAccumulatorMs: 0
+    movementAccumulatorMs: 0,
+    visionAccumulatorMs: 0
   };
 }
 
@@ -59,9 +65,16 @@ export function updateGameState(gameState) {
   }
 
   gameState.movementAccumulatorMs += 16.67;
+  gameState.visionAccumulatorMs += 16.67;
+
   while (gameState.movementAccumulatorMs >= UPDATE_INTERVALS.movement) {
     updateUnitMovement(gameState, UPDATE_INTERVALS.movement / 1000);
     gameState.movementAccumulatorMs -= UPDATE_INTERVALS.movement;
+  }
+
+  while (gameState.visionAccumulatorMs >= UPDATE_INTERVALS.vision) {
+    updateVision(gameState);
+    gameState.visionAccumulatorMs -= UPDATE_INTERVALS.vision;
   }
 }
 
@@ -80,6 +93,22 @@ function applyCommand(gameState, command) {
       type: command.type,
       target: { x: command.target.x, y: command.target.y }
     };
+  });
+}
+
+function updateVision(gameState) {
+  const alliedUnits = gameState.units.filter((unit) => unit.team === 'ally');
+  const enemyUnits = gameState.units.filter((unit) => unit.team === 'enemy');
+
+  enemyUnits.forEach((enemyUnit) => {
+    const isDetected = alliedUnits.some((allyUnit) => {
+      return getDistance(allyUnit, enemyUnit) <= allyUnit.visionRange;
+    });
+
+    enemyUnit.isVisible = isDetected;
+    if (isDetected) {
+      enemyUnit.lastKnownPosition = { x: enemyUnit.x, y: enemyUnit.y };
+    }
   });
 }
 
