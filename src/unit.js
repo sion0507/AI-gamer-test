@@ -14,6 +14,8 @@ export function createUnit({ id, team, name, x, y, isVisible = true }) {
     name,
     x,
     y,
+    homeX: x,
+    homeY: y,
     hp: DEFAULT_STATS.hp,
     maxHp: DEFAULT_STATS.maxHp,
     attackDamage: DEFAULT_STATS.attackDamage,
@@ -22,8 +24,11 @@ export function createUnit({ id, team, name, x, y, isVisible = true }) {
     moveSpeed: DEFAULT_STATS.moveSpeed,
     currentCommand: null,
     targetEnemyId: null,
+    engagedTargetId: null,
     isSelected: false,
     isVisible,
+    isActive: true,
+    patrolIndex: 0,
     lastKnownPosition: { x, y }
   };
 }

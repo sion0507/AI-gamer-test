@@ -4,6 +4,10 @@ const UNIT_SELECTION_RADIUS = 14;
 
 export function setupInput(canvas, gameState, dispatchCommand) {
   canvas.addEventListener('click', (event) => {
+    if (gameState.status !== 'playing') {
+      return;
+    }
+
     const clickPosition = getCanvasCoordinates(canvas, event);
     const clickedAlliedUnit = findClickedAlliedUnit(gameState, clickPosition);
 
@@ -12,7 +16,7 @@ export function setupInput(canvas, gameState, dispatchCommand) {
       return;
     }
 
-    const selectedUnit = gameState.units.find((unit) => unit.isSelected && unit.team === 'ally');
+    const selectedUnit = gameState.units.find((unit) => unit.isActive && unit.isSelected && unit.team === 'ally');
     if (!selectedUnit) {
       return;
     }
@@ -35,7 +39,7 @@ function getCanvasCoordinates(canvas, event) {
 
 function findClickedAlliedUnit(gameState, clickPosition) {
   return gameState.units.find((unit) => {
-    if (unit.team !== 'ally') {
+    if (!unit.isActive || unit.team !== 'ally') {
       return false;
     }
 
