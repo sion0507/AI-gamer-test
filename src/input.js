@@ -1,4 +1,5 @@
 import { COMMAND_TYPES, createCommand } from './command.js';
+import { GAME_MODES } from './game.js';
 
 const UNIT_SELECTION_RADIUS = 14;
 const DRAG_SELECTION_THRESHOLD = 6;
@@ -10,7 +11,7 @@ export function setupInput(canvas, gameState, dispatchCommand) {
   });
 
   canvas.addEventListener('mousedown', (event) => {
-    if (gameState.status !== 'playing') {
+    if (!canUsePlayerMouseControls(gameState)) {
       return;
     }
 
@@ -26,10 +27,20 @@ export function setupInput(canvas, gameState, dispatchCommand) {
   });
 
   canvas.addEventListener('mousemove', (event) => {
+    if (!canUsePlayerMouseControls(gameState)) {
+      clearSelectionDrag(gameState);
+      return;
+    }
+
     updateDragSelection(canvas, gameState, event);
   });
 
   canvas.addEventListener('mouseup', (event) => {
+    if (!canUsePlayerMouseControls(gameState)) {
+      clearSelectionDrag(gameState);
+      return;
+    }
+
     if (event.button !== 0 || !gameState.selectionDrag?.isActive) {
       return;
     }
@@ -40,6 +51,10 @@ export function setupInput(canvas, gameState, dispatchCommand) {
   canvas.addEventListener('mouseleave', () => {
     clearSelectionDrag(gameState);
   });
+}
+
+function canUsePlayerMouseControls(gameState) {
+  return gameState.status === 'playing' && gameState.mode === GAME_MODES.PLAYER_MODE;
 }
 
 function startLeftMouseInput(canvas, gameState, event) {

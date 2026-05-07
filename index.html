@@ -3,15 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simple RTS AI - Phase 5</title>
+    <title>Simple RTS AI - Phase 6</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main class="app">
       <header class="app__header">
         <h1>Simple RTS AI</h1>
-        <p>Phase 5: Drag-select allied squads, move groups with left-click, and attack-move with right-click.</p>
+        <p>Phase 6: Switch between direct player control and a placeholder AI Commander Mode.</p>
       </header>
+
+      <section class="mode-panel" aria-label="Game mode controls">
+        <div>
+          <h2>Current Mode: <span id="current-mode-label">Player Control Mode</span></h2>
+          <p>Player Mode keeps mouse selection and commands active. AI Commander Mode reserves space for future text-driven commands.</p>
+        </div>
+        <div class="mode-controls" role="group" aria-label="Switch game mode">
+          <button id="player-mode-button" class="mode-controls__button" type="button" aria-pressed="true">Player Mode</button>
+          <button id="ai-mode-button" class="mode-controls__button" type="button" aria-pressed="false">AI Commander Mode</button>
+        </div>
+      </section>
+
+      <section id="ai-commander-panel" class="commander-panel" aria-label="AI Commander placeholder" hidden>
+        <label for="commander-command-input">Commander instruction</label>
+        <textarea
+          id="commander-command-input"
+          rows="3"
+          placeholder="Future phase: type a tactical goal such as 'Scout left, then attack together.'"
+        ></textarea>
+        <p>No AI parser or LLM connection is active yet. This placeholder does not issue commands.</p>
+      </section>
 
       <section class="battlefield-wrap">
         <canvas id="battlefield" width="960" height="540" aria-label="RTS battlefield"></canvas>

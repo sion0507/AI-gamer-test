@@ -1,11 +1,11 @@
 # Simple RTS AI 게임 설명서
 
-이 문서는 Phase 1부터 Phase 5까지 구현된 게임 기능과 플레이 방법을 정리한 사용자용 설명서입니다.
+이 문서는 Phase 1부터 Phase 6까지 구현된 게임 기능과 플레이 방법을 정리한 사용자용 설명서입니다.
 
 ## 게임 개요
 
 Simple RTS AI는 브라우저에서 실행되는 2D 전술 RTS 프로토타입입니다.
-플레이어는 아군 분대를 직접 선택하고 이동시키며, 적을 발견하면 자동 전투를 통해 교전합니다.
+플레이어는 아군 분대를 직접 선택하고 이동시키며, 적을 발견하면 자동 전투를 통해 교전합니다. 또한 Player Mode와 AI Commander Mode 자리표시자 UI를 전환할 수 있습니다.
 
 현재 구현된 핵심 흐름은 다음과 같습니다.
 
@@ -43,6 +43,7 @@ http://localhost:8000
 - 유닛 근처에는 체력바가 표시됩니다.
 - 선택된 아군은 노란색 선택 원으로 표시됩니다.
 - 교전 중인 유닛 사이에는 붉은 공격선이 표시됩니다.
+- 상단 모드 패널에서 Player Mode와 AI Commander Mode를 전환할 수 있습니다.
 
 ## Phase 1: 기본 전장과 유닛 표시
 
@@ -186,6 +187,33 @@ Phase 1의 주된 목적은 화면에 전장과 유닛을 표시하는 것입니
 attackMove는 공격력이나 사거리를 강화하는 명령이 아닙니다.
 차이는 전투 능력이 아니라, 이동 중 적을 발견했을 때의 행동 방식입니다.
 
+## Phase 6: 게임 모드 UI
+
+### 구현된 기능
+
+- 게임 상태에 `PLAYER_MODE`와 `AI_COMMAND_MODE` 모드 추가
+- 상단 UI에 Player Mode / AI Commander Mode 전환 버튼 추가
+- 현재 활성 모드를 텍스트와 활성 버튼 스타일로 표시
+- AI Commander Mode 선택 시 향후 자연어 명령 입력을 위한 placeholder 패널 표시
+- AI Commander placeholder 입력 영역은 아직 명령을 실행하지 않음
+- LLM API 호출, API 키 저장, 백엔드 연동은 추가하지 않음
+- Player Mode에서는 기존 마우스 선택, 이동, attackMove 조작 유지
+- AI Commander Mode에서는 직접 마우스 전장 조작을 비활성화해 향후 Commander 명령 흐름과 구분
+
+### 조작 방법: 모드 전환
+
+1. 화면 상단의 `Player Mode` 버튼을 누르면 직접 조작 모드가 활성화됩니다.
+2. Player Mode에서는 기존처럼 아군을 클릭 또는 드래그로 선택하고, 왼쪽 클릭 이동 / 오른쪽 클릭 attackMove를 사용할 수 있습니다.
+3. `AI Commander Mode` 버튼을 누르면 AI Commander placeholder 패널이 표시됩니다.
+4. placeholder 입력 영역에는 향후 전술 목표를 입력할 예정이지만, 현재 Phase 6에서는 입력 내용이 파싱되거나 Command로 실행되지 않습니다.
+5. 다시 `Player Mode` 버튼을 누르면 기존 직접 조작을 계속 사용할 수 있습니다.
+
+### 현재 AI Commander Mode의 한계
+
+Phase 6의 AI Commander Mode는 UI와 상태 전환 기반만 제공합니다.
+실제 자연어 파싱, 규칙 기반 명령 해석, LLM 호출, AI 자동 지휘 행동은 아직 구현되지 않았습니다.
+
+
 ## 현재 승리 목표
 
 - 아군 유닛을 조작해 적 유닛을 찾아냅니다.
@@ -202,8 +230,8 @@ attackMove는 공격력이나 사거리를 강화하는 명령이 아닙니다.
 - 유닛 생산
 - 업그레이드
 - 복잡한 경로 탐색
-- AI Commander Mode UI
-- 자연어 명령 입력
+- 실제 AI Commander 명령 실행
+- 자연어 명령 파싱
 - LLM 기반 명령 해석
 - 백엔드 API 연동
 
@@ -214,4 +242,5 @@ attackMove는 공격력이나 사거리를 강화하는 명령이 아닙니다.
 - 단순히 이동만 하고 싶으면 왼쪽 클릭 이동을 사용하세요.
 - 전진하면서 적을 만나면 싸우게 하고 싶으면 오른쪽 클릭 attackMove를 사용하세요.
 - 적이 보이면 그룹을 선택한 뒤 적을 클릭하거나 attackMove로 접근시키세요.
+- AI Commander Mode는 현재 placeholder이므로 실제 유닛 조작은 Player Mode로 돌아와 수행하세요.
 - 유닛들이 너무 겹치지 않도록 그룹 이동 시 목표 주변에 자동으로 흩어집니다.

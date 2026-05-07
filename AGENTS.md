@@ -367,6 +367,19 @@ Avoid:
 - Premature optimization
 - Complex AI before the basic game loop is stable
 
+
+## Manual Documentation Policy
+
+Every phase implementation that changes user-facing behavior must update `MANUAL.md` in the same phase PR.
+
+When updating `MANUAL.md`:
+
+- Add a section for the newly implemented phase.
+- Describe the implemented features in user-facing language.
+- Document any new controls, UI panels, mode switches, or gameplay rules.
+- Update the current implementation / out-of-scope lists so they do not contradict the new phase.
+- Keep the manual practical for a player who wants to run and test the game.
+
 ## Suggested Completion Criteria Per Phase
 
 Before considering a phase complete:

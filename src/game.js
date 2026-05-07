@@ -9,7 +9,7 @@ export const UPDATE_INTERVALS = {
   commanderAI: 10000
 };
 
-const MODE = {
+export const GAME_MODES = {
   PLAYER_MODE: 'PLAYER_MODE',
   AI_COMMAND_MODE: 'AI_COMMAND_MODE'
 };
@@ -49,7 +49,7 @@ export function createGameState() {
   const enemyUnits = spawnTeam('enemy', 5, 700, 140, 70, 80);
 
   return {
-    mode: MODE.PLAYER_MODE,
+    mode: GAME_MODES.PLAYER_MODE,
     status: GAME_STATUS.PLAYING,
     statusMessage: '',
     units: [...alliedUnits, ...enemyUnits],
@@ -59,6 +59,16 @@ export function createGameState() {
     combatAccumulatorMs: 0,
     visionAccumulatorMs: 0
   };
+}
+
+export function setGameMode(gameState, mode) {
+  if (!Object.values(GAME_MODES).includes(mode)) {
+    return false;
+  }
+
+  gameState.mode = mode;
+  gameState.selectionDrag = null;
+  return true;
 }
 
 export function dispatchCommand(gameState, command) {
