@@ -54,6 +54,7 @@ export function createGameState() {
     statusMessage: '',
     units: [...alliedUnits, ...enemyUnits],
     commandQueue: [],
+    selectionDrag: null,
     movementAccumulatorMs: 0,
     combatAccumulatorMs: 0,
     visionAccumulatorMs: 0
@@ -107,18 +108,29 @@ function applyCommand(gameState, command) {
     return;
   }
 
-  command.unitIds.forEach((unitId) => {
+  command.unitIds.forEach((unitId, index) => {
     const unit = findActiveUnitById(gameState, unitId);
     if (!unit) {
       return;
     }
 
+    const formationOffset = command.metadata?.formationOffsets?.[index] ?? { x: 0, y: 0 };
+    const target = applyFormationOffset(command.target, formationOffset);
+
     unit.currentCommand = {
       type: command.type,
-      target: { x: command.target.x, y: command.target.y },
+      target,
+      formationOffset,
       targetEnemyId: command.metadata?.targetEnemyId ?? null
     };
   });
+}
+
+function applyFormationOffset(target, offset) {
+  return {
+    x: target.x + offset.x,
+    y: target.y + offset.y
+  };
 }
 
 function updateVision(gameState) {
@@ -150,7 +162,10 @@ function updateUnitMovement(gameState, deltaSeconds) {
           return;
         }
 
-        unit.currentCommand.target = { x: targetEnemy.x, y: targetEnemy.y };
+        unit.currentCommand.target = applyFormationOffset(
+          targetEnemy,
+          unit.currentCommand.formationOffset ?? { x: 0, y: 0 }
+        );
       }
     }
 
