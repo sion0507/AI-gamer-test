@@ -3,7 +3,9 @@
   --bg: #101820;
   --panel: #1a2330;
   --accent: #6ec1ff;
+  --accent-strong: #2f95ff;
   --text: #e8f0ff;
+  --muted: #b9c6dc;
 }
 
 * {
@@ -31,7 +33,96 @@ body {
 
 .app__header p {
   margin: 0.35rem 0 1rem;
-  color: #b9c6dc;
+  color: var(--muted);
+}
+
+.mode-panel,
+.commander-panel {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border: 1px solid #33495f;
+  border-radius: 8px;
+  background: rgba(26, 35, 48, 0.88);
+  padding: 0.85rem;
+}
+
+.mode-panel h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.mode-panel p,
+.commander-panel p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.mode-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mode-controls__button {
+  border: 1px solid #45637f;
+  border-radius: 999px;
+  background: #223146;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  padding: 0.55rem 0.9rem;
+}
+
+.mode-controls__button:hover,
+.mode-controls__button:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.mode-controls__button--active {
+  border-color: var(--accent);
+  background: var(--accent-strong);
+  color: #06101d;
+  font-weight: 700;
+}
+
+.commander-panel {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.commander-panel[hidden] {
+  display: none;
+}
+
+.commander-panel label {
+  font-weight: 700;
+}
+
+.commander-panel textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid #45637f;
+  border-radius: 6px;
+  background: #101820;
+  color: var(--text);
+  font: inherit;
+  padding: 0.65rem;
+}
+
+@media (max-width: 720px) {
+  .mode-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mode-controls {
+    justify-content: flex-start;
+  }
 }
 
 .battlefield-wrap {

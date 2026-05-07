@@ -2,6 +2,7 @@ import { createGameState, dispatchCommand, updateGameState } from './game.js';
 import { setupInput } from './input.js';
 import { renderGame } from './render.js';
 import { updateAI } from './ai.js';
+import { setupModeControls } from './ui.js';
 
 function bootstrap() {
   const canvas = document.getElementById('battlefield');
@@ -16,6 +17,7 @@ function bootstrap() {
   }
 
   const gameState = createGameState();
+  setupModeControls(gameState);
   setupInput(canvas, gameState, dispatchCommand);
 
   function gameLoop() {
