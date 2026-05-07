@@ -110,6 +110,27 @@ function drawHealthBar(ctx, unit) {
   ctx.strokeRect(x, y, width, height);
 }
 
+
+function drawSelectionBox(ctx, selectionDrag) {
+  if (!selectionDrag?.isActive || !selectionDrag.isDragging) {
+    return;
+  }
+
+  const x = Math.min(selectionDrag.start.x, selectionDrag.current.x);
+  const y = Math.min(selectionDrag.start.y, selectionDrag.current.y);
+  const width = Math.abs(selectionDrag.current.x - selectionDrag.start.x);
+  const height = Math.abs(selectionDrag.current.y - selectionDrag.start.y);
+
+  ctx.fillStyle = 'rgba(110, 193, 255, 0.14)';
+  ctx.fillRect(x, y, width, height);
+
+  ctx.strokeStyle = 'rgba(182, 225, 255, 0.9)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([6, 4]);
+  ctx.strokeRect(x, y, width, height);
+  ctx.setLineDash([]);
+}
+
 function drawStatusOverlay(ctx, gameState) {
   if (gameState.status === 'playing') {
     return;
@@ -140,6 +161,8 @@ export function renderGame(ctx, gameState) {
       drawUnit(ctx, unit);
     }
   });
+
+  drawSelectionBox(ctx, gameState.selectionDrag);
 
   drawStatusOverlay(ctx, gameState);
 }
