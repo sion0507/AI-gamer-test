@@ -17,7 +17,7 @@ function bootstrap() {
   }
 
   const gameState = createGameState();
-  setupModeControls(gameState);
+  setupModeControls(gameState, dispatchCommand);
   setupInput(canvas, gameState, dispatchCommand);
 
   function gameLoop() {

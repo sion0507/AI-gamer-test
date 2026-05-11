@@ -1,11 +1,11 @@
 # Simple RTS AI 게임 설명서
 
-이 문서는 Phase 1부터 Phase 6까지 구현된 게임 기능과 플레이 방법을 정리한 사용자용 설명서입니다.
+이 문서는 Phase 1부터 Phase 7까지 구현된 게임 기능과 플레이 방법을 정리한 사용자용 설명서입니다.
 
 ## 게임 개요
 
 Simple RTS AI는 브라우저에서 실행되는 2D 전술 RTS 프로토타입입니다.
-플레이어는 아군 분대를 직접 선택하고 이동시키며, 적을 발견하면 자동 전투를 통해 교전합니다. 또한 Player Mode와 AI Commander Mode 자리표시자 UI를 전환할 수 있습니다.
+플레이어는 아군 분대를 직접 선택하고 이동시키며, 적을 발견하면 자동 전투를 통해 교전합니다. 또한 Player Mode와 AI Commander Mode를 전환하고, AI Commander Mode에서 간단한 텍스트 명령을 실행할 수 있습니다.
 
 현재 구현된 핵심 흐름은 다음과 같습니다.
 
@@ -44,6 +44,7 @@ http://localhost:8000
 - 선택된 아군은 노란색 선택 원으로 표시됩니다.
 - 교전 중인 유닛 사이에는 붉은 공격선이 표시됩니다.
 - 상단 모드 패널에서 Player Mode와 AI Commander Mode를 전환할 수 있습니다.
+- AI Commander Mode 패널에서 간단한 텍스트 명령을 입력하고 실행할 수 있습니다.
 
 ## Phase 1: 기본 전장과 유닛 표시
 
@@ -208,10 +209,49 @@ attackMove는 공격력이나 사거리를 강화하는 명령이 아닙니다.
 4. placeholder 입력 영역에는 향후 전술 목표를 입력할 예정이지만, 현재 Phase 6에서는 입력 내용이 파싱되거나 Command로 실행되지 않습니다.
 5. 다시 `Player Mode` 버튼을 누르면 기존 직접 조작을 계속 사용할 수 있습니다.
 
-### 현재 AI Commander Mode의 한계
+### Phase 6 당시 AI Commander Mode의 한계
 
-Phase 6의 AI Commander Mode는 UI와 상태 전환 기반만 제공합니다.
-실제 자연어 파싱, 규칙 기반 명령 해석, LLM 호출, AI 자동 지휘 행동은 아직 구현되지 않았습니다.
+Phase 6의 AI Commander Mode는 UI와 상태 전환 기반만 제공했습니다.
+당시에는 실제 자연어 파싱, 규칙 기반 명령 해석, LLM 호출, AI 자동 지휘 행동이 아직 구현되지 않았습니다.
+
+## Phase 7: 간단한 텍스트 명령 파서
+
+### 구현된 기능
+
+- AI Commander Mode 입력 영역이 실제 명령 입력 UI로 변경됨
+- 간단한 규칙 기반 키워드 파서 추가
+- 파싱된 텍스트 명령은 Command 객체로 변환된 뒤 기존 명령 처리 시스템을 통해 실행됨
+- 외부 AI API, LLM 호출, API 키, 백엔드 연동은 추가하지 않음
+- 선택된 아군이 있으면 선택된 아군에게 명령을 내리고, 선택된 아군이 없으면 생존한 모든 아군에게 명령을 내림
+- 영어와 간단한 한국어 키워드를 모두 지원
+
+### 지원 명령
+
+| 입력 예시 | 동작 | 내부 Command 타입 |
+|---|---|---|
+| `center attack`, `central attack`, `attack center` | 전장 중앙으로 공격 이동 | `attackMove` |
+| `중앙 공격` | 전장 중앙으로 공격 이동 | `attackMove` |
+| `left scout`, `scout left` | 왼쪽 지역으로 정찰 이동 | `scout` |
+| `왼쪽 정찰`, `좌측 정찰` | 왼쪽 지역으로 정찰 이동 | `scout` |
+| `retreat`, `fall back` | 아군 시작 지역 쪽으로 후퇴 | `retreat` |
+| `후퇴` | 아군 시작 지역 쪽으로 후퇴 | `retreat` |
+| `defend`, `hold base` | 아군 기지 근처 방어 위치로 이동 | `defend` |
+| `방어` | 아군 기지 근처 방어 위치로 이동 | `defend` |
+
+### 조작 방법: 텍스트 명령 실행
+
+1. 필요하면 Player Mode에서 아군을 클릭 또는 드래그로 선택합니다. 선택하지 않아도 됩니다.
+2. `AI Commander Mode` 버튼을 누릅니다.
+3. Commander instruction 입력칸에 지원 명령 중 하나를 입력합니다.
+4. `Issue Command` 버튼을 누릅니다.
+5. 입력이 인식되면 해당 명령이 Command 객체로 생성되어 아군에게 전달됩니다.
+6. 입력이 인식되지 않으면 패널에 사용 가능한 예시 명령이 표시됩니다.
+
+### 현재 AI Commander 파서의 한계
+
+Phase 7 파서는 의도적으로 단순합니다.
+긴 자연어 지시, 조건부 명령, 여러 단계 작전, “정찰 후 적 발견 시 공격” 같은 복합 지시는 아직 지원하지 않습니다.
+이 단계의 목적은 텍스트 입력도 반드시 Command 객체로 변환되어 게임에 전달되는 구조를 검증하는 것입니다.
 
 
 ## 현재 승리 목표
@@ -230,8 +270,8 @@ Phase 6의 AI Commander Mode는 UI와 상태 전환 기반만 제공합니다.
 - 유닛 생산
 - 업그레이드
 - 복잡한 경로 탐색
-- 실제 AI Commander 명령 실행
-- 자연어 명령 파싱
+- 복잡한 AI Commander 자동 전략 실행
+- 복합 자연어 명령 파싱
 - LLM 기반 명령 해석
 - 백엔드 API 연동
 
@@ -242,5 +282,5 @@ Phase 6의 AI Commander Mode는 UI와 상태 전환 기반만 제공합니다.
 - 단순히 이동만 하고 싶으면 왼쪽 클릭 이동을 사용하세요.
 - 전진하면서 적을 만나면 싸우게 하고 싶으면 오른쪽 클릭 attackMove를 사용하세요.
 - 적이 보이면 그룹을 선택한 뒤 적을 클릭하거나 attackMove로 접근시키세요.
-- AI Commander Mode는 현재 placeholder이므로 실제 유닛 조작은 Player Mode로 돌아와 수행하세요.
+- AI Commander Mode에서는 `center attack`, `left scout`, `retreat`, `defend` 같은 짧은 명령만 사용하세요.
 - 유닛들이 너무 겹치지 않도록 그룹 이동 시 목표 주변에 자동으로 흩어집니다.

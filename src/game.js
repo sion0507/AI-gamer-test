@@ -114,7 +114,15 @@ export function updateGameState(gameState) {
 }
 
 function applyCommand(gameState, command) {
-  if (![COMMAND_TYPES.MOVE, COMMAND_TYPES.ATTACK_MOVE].includes(command.type) || !command.target) {
+  const movementCommandTypes = [
+    COMMAND_TYPES.MOVE,
+    COMMAND_TYPES.ATTACK_MOVE,
+    COMMAND_TYPES.SCOUT,
+    COMMAND_TYPES.DEFEND,
+    COMMAND_TYPES.RETREAT
+  ];
+
+  if (!movementCommandTypes.includes(command.type) || !command.target) {
     return;
   }
 
@@ -161,11 +169,11 @@ function updateVision(gameState) {
 
 function updateUnitMovement(gameState, deltaSeconds) {
   getActiveUnits(gameState).forEach((unit) => {
-    if (!unit.currentCommand || ![COMMAND_TYPES.MOVE, COMMAND_TYPES.ATTACK_MOVE].includes(unit.currentCommand.type)) {
+    if (!unit.currentCommand || !isMovementCommandType(unit.currentCommand.type)) {
       return;
     }
 
-    if (unit.currentCommand.type === COMMAND_TYPES.ATTACK_MOVE) {
+    if ([COMMAND_TYPES.ATTACK_MOVE, COMMAND_TYPES.SCOUT].includes(unit.currentCommand.type)) {
       const targetEnemy = getCommandTargetEnemy(gameState, unit);
       if (targetEnemy) {
         if (getDistance(unit, targetEnemy) <= unit.attackRange) {
@@ -181,6 +189,16 @@ function updateUnitMovement(gameState, deltaSeconds) {
 
     moveUnitTowardCurrentCommand(unit, deltaSeconds);
   });
+}
+
+function isMovementCommandType(commandType) {
+  return [
+    COMMAND_TYPES.MOVE,
+    COMMAND_TYPES.ATTACK_MOVE,
+    COMMAND_TYPES.SCOUT,
+    COMMAND_TYPES.DEFEND,
+    COMMAND_TYPES.RETREAT
+  ].includes(commandType);
 }
 
 function moveUnitTowardCurrentCommand(unit, deltaSeconds) {
